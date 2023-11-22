@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # This Python file uses the following encoding: utf-8
 #############################
 ##  
@@ -10,7 +11,6 @@
 #	updates posted @ https://www.forensicfocus.com/Forums/viewtopic/t=16846/
 ##
 ####################
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 import binascii, math, zlib, sys, re, os, errno
@@ -49,10 +49,10 @@ class QNX6FS:
 			##Detect if MBR is valid.
 			BootRecordSignature = unpack('H', BootRecordSignature)[0]
 			if BootRecordSignature == 0xAA55:
-				if ord(BootCode[0]) == 235:
+				if BootCode[0] == 235:
 					return self.parseNoPartitionQNX(handle,0)
 				else:
-					print "[-] BootRecordSignature Detected."
+					print("[-] BootRecordSignature Detected.")
 					return self.parsePartitionMBR(handle,0)
 			else:
 				raise IOError('[ERROR] BootRecordSignature Missing; Invalid Disk Image')
@@ -80,18 +80,18 @@ class QNX6FS:
 			PartitionList[i]['qnx6'] = False
 			PartitionID = ord(PartitionList[i]['PartitionType'])
 			if PartitionID == 0x05 or PartitionID == 0x0F:
-					print "[-] (EBR) Extended Boot Record Detected, Processing...."
+					print("[-] (EBR) Extended Boot Record Detected, Processing....")
 					Parts = self.parsePartitionMBR(fileIO, offset + PartitionList[i]['StartingSector'], blockSize) 
 					for partID in range(0, len(Parts)):
 						PartitionList[len(PartitionList) + 1] = Parts[partID]
 			elif ( PartitionID == 0xB1 or PartitionID == 0xB2 or PartitionID == 0xB3 or PartitionID == 0xB4 ):
-					print "[+] Supported QNX6FS Partition Detected @",format(PartitionList[i]['StartingOffset'],"02x")
+					print("[+] Supported QNX6FS Partition Detected @",format(PartitionList[i]['StartingOffset'],"02x"))
 					PartitionList[i]['qnx6'] = True
 			elif ( PartitionID == 0x4D or PartitionID == 0x4E or PartitionID == 0x4F ):
-					print "[X] Unsupported QNX4FS Partition Detected @",format(PartitionList[i]['StartingOffset'],"02x")
+					print("[X] Unsupported QNX4FS Partition Detected @",format(PartitionList[i]['StartingOffset'],"02x"))
 			else:
-					print format(PartitionID,"02x")
-					print PartitionList[i]
+					print(format(PartitionID,"02x"))
+					print(PartitionList[i])
 
 		return PartitionList;
 
@@ -115,7 +115,7 @@ class QNX6FS:
 		PartitionList[i]['SectorSize'] = 512
 		PartitionList[i]['qnx6'] = True
 		PartitionID = ord(PartitionList[i]['PartitionType'])
-		print "[+] Supported QNX6FS Partition Detected @",format(PartitionList[i]['StartingOffset'],"02x")
+		print("[+] Supported QNX6FS Partition Detected @",format(PartitionList[i]['StartingOffset'],"02x"))
 		return PartitionList;
 
 	def ParseQNX(self, Partition, PartitionID):
@@ -139,7 +139,7 @@ class QNX6FS:
 			SuperBlock = self.parseQNX6SuperBlock(Data, Partition['StartingOffset'])
 
 		if SuperBlock['magic'] == self.PARTITION_MAGIC['QNX6']:
-			print " |---+ First SuperBlock Detected","( Serial:", SuperBlock['serial'],") @",format(Offset,"02x")
+			print(" |---+ First SuperBlock Detected","( Serial:", SuperBlock['serial'],") @",format(Offset,"02x"))
 
 			BackupSuperBlock_Offset = Partition['StartingOffset'] + self.QNX6_SUPERBLOCK_AREA + self.QNX6_BOOTBLOCK_SIZE + ( SuperBlock['num_blocks'] * SuperBlock['blocksize'])
 			self.fileIO.seek(BackupSuperBlock_Offset, 0)
@@ -147,14 +147,14 @@ class QNX6FS:
 			blkSuperBlock = self.parseQNX6SuperBlock(Data, Partition['StartingOffset'])
 
 			if blkSuperBlock['magic'] == self.PARTITION_MAGIC['QNX6']:
-				print "     |---+ Second SuperBlock Detected ","( Serial:", blkSuperBlock['serial'],") @",format(BackupSuperBlock_Offset,"02x")
+				print("     |---+ Second SuperBlock Detected ","( Serial:", blkSuperBlock['serial'],") @",format(BackupSuperBlock_Offset,"02x"))
 
 				if blkSuperBlock['serial'] < SuperBlock['serial']:
 					SB = SuperBlock
-					print "         |---+ Using First SuperBlock as Active Block"
+					print("         |---+ Using First SuperBlock as Active Block")
 				else:
 					SB = blkSuperBlock
-					print "         |---+ Using Second SuperBlock as Active Block" 
+					print("         |---+ Using Second SuperBlock as Active Block") 
 
 			self.printSuperBlockInfo(SB)
 			self.parseBitmap(SB)
@@ -166,12 +166,12 @@ class QNX6FS:
 			self.parseINODE(SB,PartitionID)
 			
 	def printSuperBlockInfo(self, SB):
-				print "              |--- volumeID:\t", ("".join("%02x" % q for q in SB['volumeid'] )).upper()
-				print "              |--- checksums:\t", ("0x%0.8X" % SB['checksum'])
-				print "              |--- num_inodes:\t", SB['num_inodes']
-				print "              |--- num_blocks:\t", SB['num_blocks']
-				print "              |--- blocksize:\t", SB['blocksize']
-				print "              |--- blkoffset: \t", SB['blks_offset']
+				print("              |--- volumeID:\t", ("".join("%02x" % q for q in SB['volumeid'] )).upper())
+				print("              |--- checksums:\t", ("0x%0.8X" % SB['checksum']))
+				print("              |--- num_inodes:\t", SB['num_inodes'])
+				print("              |--- num_blocks:\t", SB['num_blocks'])
+				print("              |--- blocksize:\t", SB['blocksize'])
+				print("              |--- blkoffset: \t", SB['blks_offset'])
 
 	def parseQNX6SuperBlock(self, sb, offset): # B = 8 , H = 16 , I = 32 , L = 32 , Q = 64
 		SB = {}
@@ -210,14 +210,14 @@ class QNX6FS:
 		return RN
 
 	def parseINODE(self,superBlock,PartitionID):
-				print "              |--+ Inode: Detected - Processing...."
+				print("              |--+ Inode: Detected - Processing....")
 				#print "                 |---Size:",  superBlock['Inode']['size']
 				#print "                 |---Level:",  superBlock['Inode']['level']
 				#print "                 |---Mode:",  superBlock['Inode']['mode']
 				self.INodeTree = {}
 				self.DirTree = {}
 				if (superBlock['Inode']['level'] > self.QNX6_PTR_MAX_LEVELS):
-					print "[x] invalid Inode structure."
+					print("[x] invalid Inode structure.")
 					return 0
 				#print "                 |--+PTR: "
 				for n in range(0, 16):
@@ -227,21 +227,21 @@ class QNX6FS:
 						#print "                    |--",n," : ",format(ptr_,'02x')
 						superBlock['Inodes'] = self.praseQNX6Inode(ptr,superBlock['Inode']['level'],superBlock['blocksize'],superBlock['blks_offset'])
 				
-				print "[-] Generating directory Listing && Auto Extracting Files to (.\\Extracted\\Partition"+str(PartitionID)+")"
+				print("[-] Generating directory Listing && Auto Extracting Files to (.\\Extracted\\Partition"+str(PartitionID)+")")
 				self.parseINodeDIRStruct(superBlock['blocksize'],superBlock['blks_offset'])
 
 				for i in self.DirTree:
-					self.dumpfile(i,'.\\Extraced\\',superBlock['blocksize'],superBlock['blks_offset'],PartitionID)
+					self.dumpfile(i,'./Extracted/',superBlock['blocksize'],superBlock['blks_offset'],PartitionID)
 
 				#self.parseINodeDIRbyID(1,superBlock['blocksize'],superBlock['blks_offset'])
 	
 	def parseLongFileNames(self,superBlock):
-				print "              |--+ Longfile: Detected - Processing...."
+				print("              |--+ Longfile: Detected - Processing....")
 				#print "                 |---Size:",  superBlock['Longfile']['size']
 				#print "                 |---Level:",  superBlock['Longfile']['level']
 				#print "                 |---Mode:",  superBlock['Longfile']['mode']
 				if (superBlock['Longfile']['level'] > self.QNX6_PTR_MAX_LEVELS):
-					print "                           *invalid levels, too many*"
+					print("                           *invalid levels, too many*")
 				#print "                 |---PTR: "
 				longnames = []
 				for n in range(0, 16):
@@ -293,18 +293,18 @@ class QNX6FS:
 			RawData = self.fileIO.read(blksize)
 
 			if level >= 1:
-				Pointers = unpack('<'+str(blksize/4)+'I', RawData)
-				for i in range(0, (blksize/4)):
+				Pointers = unpack('<'+str(blksize//4)+'I', RawData)
+				for i in range(0, (blksize//4)):
 					if self.checkQNX6blkptr((Pointers[i]*blksize)+blksOffset):
 						self.praseQNX6Inode(Pointers[i],level-1,blksize,blksOffset)
 			else:
-				inode_range = (blksize / 128)
+				inode_range = (blksize // 128)
 				for i in range(0,inode_range):
 					try:
-						item = self.parseQNX6InodeEntry(RawData[(i*(blksize/inode_range)):((i+1)*(blksize/inode_range))])
+						item = self.parseQNX6InodeEntry(RawData[(i*(blksize//inode_range)):((i+1)*(blksize//inode_range))])
 						self.INodeTree[len(self.INodeTree)+1] = item
 					except:
-						print i, len(self.INodeTree), format(ptr_,'02x'), format(ptr,'02x')
+						print(i, len(self.INodeTree), format(ptr_,'02x'), format(ptr,'02x'))
 						self.INodeTree[len(self.INodeTree)+1] = None
 						break
 
@@ -365,7 +365,7 @@ class QNX6FS:
 		for ptr in ptrs:
 			self.fileIO.seek(ptr) 
 			RawData = self.fileIO.read(blksize)
-			for i in range(0,(blksize/32)):
+			for i in range(0,(blksize//32)):
 				raw = RawData[ i*32: ((i+1)*32) ]
 				if (unpack('<I', raw[0:4])[0] != 0):
 					DIR[str(ptr)+"-"+str(i)]={}
@@ -393,7 +393,7 @@ class QNX6FS:
 					for idir in DIRS:
 						if (DIRS[idir]['Length'] > 0) and (DIRS[idir]['Length'] < 28):
 							if DIRS[idir]['Name'] != "." and DIRS[idir]['Name'] != "..":
-								print ("   "*level),"+-",DIRS[idir]['Name'] #, " -- " , DIRS[idir]['PTR']
+								print(("   "*level),"+-",DIRS[idir]['Name']) #, " -- " , DIRS[idir]['PTR']
 
 							elif DIRS[idir]['Name'] == "..":
 								root = DIRS[idir]['PTR'];
@@ -418,23 +418,23 @@ class QNX6FS:
 		return (ptr ^ mask == 0) == False			
 
 	def InodeEntry_ISDIR(self,mode):
-		return ((mode & 040000) == 040000)
+		return ((mode & 0o040000) == 0o040000)
 
 	def InodeEntry_ISREG(self,mode):
-		return ((mode & 0100000) == 0100000)
+		return ((mode & 0o0100000) == 0o0100000)
 
 	def InodeEntry_ISLNK(self,mode):
-		return ((mode & 0120000) == 0120000)
+		return ((mode & 0o0120000) == 0o0120000)
 
 	def parseBitmap(self,superBlock):
 		self.Bitmaps = {}
-		print "              |--+ Bitmap: Detected - Processing.... (using fast mode, this will still take a while.)"
+		print("              |--+ Bitmap: Detected - Processing.... (using fast mode, this will still take a while.)")
 		#print "       |---Size:",  superBlock['Bitmap']['size']
 		#print "       |---Level:",  superBlock['Bitmap']['level']
 		#print "       |---Mode:",  superBlock['Bitmap']['mode']
 
 		if (superBlock['Bitmap']['level'] > self.QNX6_PTR_MAX_LEVELS):
-			print "                 *invalid levels, too many*"
+			print("                 *invalid levels, too many*")
 		#print "       |--+PTR: "
 		for n in range(0, 16):
 			ptr = superBlock['Bitmap']['ptr'][n]
@@ -453,9 +453,9 @@ class QNX6FS:
 			for i in range(1,len(self.Bitmaps)):
 				Data = self.Bitmaps[i]['DATA']
 				for byte in Data:
-					if ord(byte) > 0:
+					if byte > 0:
 						for ii in range(0,7):
-							bit = ((ord(byte) >> ii) & 00000001 )
+							bit = ((byte >> ii) & 1 )
 							#print bit,
 							#sys.stdout.write(str(bit))
 							#sys.stdout.flush()
@@ -466,7 +466,7 @@ class QNX6FS:
 									snip=self.getSnippet(count,superBlock['blocksize'],superBlock['blks_offset'])
 									#print "                 |---Deleted Data @:", format(PhysicalPTR,'02x') , "(",snip,")"
 							count = count + 1;
-		print "                 |---Deleted Blocks:", dcount , "found"  
+		print("                 |---Deleted Blocks:", dcount , "found")  
 				
 	def praseQNX6Bitmap(self,ptr,level,blksize,blksOffset):
 		ptr_=(ptr*blksize)+blksOffset
@@ -510,7 +510,7 @@ class QNX6FS:
 
 		##DIRINodeID = PTR for ".." using backwards recursion the full dir path can be found.
 
-	def dumpfile(self,DataINodeID,output_directory='.\\',blksize=1024,blkOffset=0,PartitionID=0):
+	def dumpfile(self,DataINodeID,output_directory='./',blksize=1024,blkOffset=0,PartitionID=0):
 		InodeDataEntry = self.INodeTree[DataINodeID]
 		if (InodeDataEntry != None) and not (self.InodeEntry_ISDIR(InodeDataEntry['mode'])):
 			filename = self.DirTree[DataINodeID]['Name']
@@ -522,9 +522,9 @@ class QNX6FS:
 				if dirID <= 0x01:
 					break
 				if dirID != DataINodeID:
-					dirpath = self.DirTree[dirID]['Name'] +"\\"+ dirpath
+					dirpath = self.DirTree[dirID]['Name'] +"/"+ dirpath
 				dirID = self.DirTree[dirID]['ROOT_INODE']
-			print " |--- [",self.bytes2human(InodeDataEntry['size']),"] \t", dirpath + filename
+			print(" |--- [",self.bytes2human(InodeDataEntry['size']),"] \t", dirpath + filename)
 
 			## Create List of all physical blocks
 			PhysicalPTRs = []
@@ -534,12 +534,12 @@ class QNX6FS:
 					## Calculate Physical Location.
 					PhysicalPTRs += [(pointer_index*blksize)+blkOffset]
 
-			if os.path.exists(output_directory+"Partition"+str(PartitionID)+"\\"+dirpath) == False:
-				try: os.makedirs(output_directory+"Partition"+str(PartitionID)+"\\"+dirpath)
+			if os.path.exists(output_directory+"Partition"+str(PartitionID)+"/"+dirpath) == False:
+				try: os.makedirs(output_directory+"Partition"+str(PartitionID)+"/"+dirpath)
 				except OSError as e:
 					pass
 
-			filepath=output_directory+"Partition"+str(PartitionID)+"\\"+dirpath+filename
+			filepath=output_directory+"Partition"+str(PartitionID)+"/"+dirpath+filename
 			if os.path.exists(filepath) == False:
 				self.batchProcessPTRS(PhysicalPTRs,InodeDataEntry,InodeDataEntry['filelevels'],blksize,blkOffset,filepath)
 
@@ -550,7 +550,7 @@ class QNX6FS:
 		if io == 0:
 			io = open(path,"wb+");
 
-		DATABUFF = ""
+		DATABUFF = bytes()
 		for i in range(0,len(ptrs)):
 			if level == 0:
 				if self.checkQNX6blkptr(ptrs[i]):
@@ -562,7 +562,7 @@ class QNX6FS:
 							DATABUFF += self.fileIO.read((InodeDataEntry['size'] - io.tell()))
 			else:		
 				self.fileIO.seek(ptrs[i])
-				newPTRS = unpack('<'+str(blksize/4)+'I', self.fileIO.read(blksize))
+				newPTRS = unpack('<'+str(blksize//4)+'I', self.fileIO.read(blksize))
 				level2_PTRS = []
 				for i in range(0,len(newPTRS)):
 					if self.checkQNX6blkptr(newPTRS[i]):
@@ -590,26 +590,26 @@ def main():
 	if os.path.exists(sys.argv[1]):
 		Q6 = QNX6FS(sys.argv[1]);
 		Partitions = Q6.GetPartitions();
-		print "[-] Detected", len(Partitions) ,"Partitions."
+		print("[-] Detected", len(Partitions) ,"Partitions.")
 
 		for i in range(0, len(Partitions)):
 			if ( Partitions[i]['qnx6'] == True ):
-				print "[-] Processing Partition",i+1,"of",len(Partitions)
+				print("[-] Processing Partition",i+1,"of",len(Partitions))
 				Q6.ParseQNX(Partitions[i],i+1)
-			print ""
+			print("")
 			break
 	else:
-		print "QNX6FS Parser v0.2d rev 2; mathew.evans[@]nop[.]ninja ; Dec 2019"
-		print "------------------------------------------------------------"
-		print "- src/url: https://NOP.ninja/qnx6-0.2d.py"
-		print "- "
-		print "- THIS IS A RELESE-CANDIDATE; USE AT YOUR OWN RISK "
-		print "- "
-		print "- [+] QNX 6.5.0 DONE"
-		print "- [-] QNX 6.5.1 TDB"
-		print "- "
-		print "- Usage: qnx6.py RAWIMAGEFILE.001"
-		print "------------------------------------------------------------"
+		print("QNX6FS Parser v0.2d rev 2; mathew.evans[@]nop[.]ninja ; Dec 2019")
+		print("------------------------------------------------------------")
+		print("- src/url: https://NOP.ninja/qnx6-0.2d.py")
+		print("- ")
+		print("- THIS IS A RELESE-CANDIDATE; USE AT YOUR OWN RISK ")
+		print("- ")
+		print("- [+] QNX 6.5.0 DONE")
+		print("- [-] QNX 6.5.1 TDB")
+		print("- ")
+		print("- Usage: qnx6.py RAWIMAGEFILE.001")
+		print("------------------------------------------------------------")
 
 if __name__ == "__main__":
     main();
